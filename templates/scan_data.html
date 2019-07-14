@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block header %}
+<link href="/static/css/jquery.dataTables.min.css" rel="stylesheet">
+<link href="/static/css/dataTables.bootstrap4.min.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<h1>Scan data <button type="button" class="btn btn-warning">Update at {{ date }}</button></h1>
+
+{% set ns = namespace() %}
+{% set ns.last_address = "x" %}
+{% set ns.row_color  = "active" %}
+<div class="table-responsive">
+{# <table id="myTable" class="display compact" style="width:100%">  class="table table-sm"> #}
+<style>
+    tr.group,
+    tr.group:hover {
+        background-color: #ddd !important;
+    }
+</style>
+<table id="myTable" class="display cell-border" style="width:100%">
+<thead>
+<tr>
+<th>Address</th>
+<th>Name</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+{%- for scan_data in t_scan_data -%}
+{%- if ns.last_address == scan_data[0] -%}
+{%- else -%}
+     {%- set ns.last_address = scan_data[0] -%}
+     {%- if ns.row_color == "active" %}{% set ns.row_color  = "success" -%}
+     {%- else -%}{%- set ns.row_color  = "active" -%}
+     {%- endif -%}
+{%- endif -%}
+<tr> {# class="table-{{ns.row_color}}"> #}
+    <td>{{scan_data[0]}} ({{scan_data[1]}})</td>
+    <td>{% if scan_data[2] == "Complete Local Name" %}<b>{% endif %}{{scan_data[2]}}{% if scan_data[2] == "Complete Local Name" %}</b>{% endif %}</td>
+    <td class="{% if scan_data[3][0] == "沪" %}danger{% elif scan_data[1] == "public" %}info{% else %}warning{% endif %}"> {{scan_data[3]}}</td>
+</tr>
+{%- endfor -%}
+</tbody>
+</table>
+</div>
+
+<script src="/static/js/jquery.dataTables.min.js"></script>
+{# <script>
+$(document).ready(function() {
+    $('#myTable').DataTable( {
+        scrollY:        '50vh',
+        scrollCollapse: true,
+        paging:         false
+    } );
+} );
+</script>
+#}
+
+<script>
+    $(document).ready(function() {
+        var groupColumn = 0;
+        var table = $('#myTable').DataTable({
+            "columnDefs": [
+                { "visible": false, "targets": groupColumn }
+            ],
+            "order": [[ groupColumn, 'asc' ]],
+            "displayLength": 25,
+            "drawCallback": function ( settings ) {
+                var api = this.api();
+                var rows = api.rows( {page:'current'} ).nodes();
+                var last=null;
+
+                api.column(groupColumn, {page:'current'} ).data().each( function ( group, i ) {
+                    if ( last !== group ) {
+                        $(rows).eq( i ).before(
+                            '<tr class="group"><td colspan="5">'+group+'</td></tr>'
+                        );
+
+                        last = group;
+                    }
+                } );
+            }
+        } );
+
+        // Order by the grouping
+        $('#myTable tbody').on( 'click', 'tr.group', function () {
+            var currentOrder = table.order()[0];
+            if ( currentOrder[0] === groupColumn && currentOrder[1] === 'asc' ) {
+                table.order( [ groupColumn, 'desc' ] ).draw();
+            }
+            else {
+                table.order( [ groupColumn, 'asc' ] ).draw();
+            }
+        } );
+    } );
+</script>
+DONE!
+{% endblock %}

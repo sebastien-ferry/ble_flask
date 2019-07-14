@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+
+{% block header %}
+<link href="/static/css/Chart.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<h1 id="db">DB or not</h1>
+<hr>
+
+<script src="/static/js/Chart.bundle.min.js"></script>
+<script>
+var b_labels = [];
+var b_data =[] ;
+
+var options = {
+    legend: {display: false }
+    , scales: {
+        xAxes: [ { display: true, scaleLabel: { display: false,}
+          , ticks: { major: { display: false} } } ]
+      , yAxes: [ { display: true, scaleLabel: { display: false, }
+          , ticks: { beginAtZero:true , major: {display:false} } } ]
+    }
+};
+</script>
+resultarea: <div id="resultarea"></div>
+result: <div id="result"></div>
+
+{% for (name,total,delta,bucket,link) in [
+                      ('Scan', 'scan_total', 'scan_delta', 'scan_bucket', '/scan')
+                      ] %}
+<div class="row">
+    <div class="col-sm-3">
+    <div class="card border border-info rounded text-center bg-light" style="max-width:14rem;">
+        <h3 class="card-header" id="card_total">Total...</h3>
+        <div class="card-body bg-light">
+        <div class="card-title text-muted" id="card_delta">+delta...<a href="{{link}}" class="card-link" id="card_name">{{name}}</a></div>
+        <div class="border border-secondary rounded"><br>
+            <canvas style="width:240px;height:240px;" id="line-chart-{{name}}">?</canvas></div>
+        </div>
+    </div>
+    </div>
+    <script>
+    var ctx = $("#line-chart-{{name}}");
+    var lineChart = new Chart(ctx, {
+          type: 'bar'
+        , data: {
+                  labels: b_labels
+                , datasets: [ { label: "name", data: b_data } ]
+                }
+        , options: options
+    });
+    </script>
+</div>
+{% endfor %}
+
+<script>
+$(document).ready(function(){
+
+    var jqxhr = $.getJSON( "/ajax", function() {
+      console.log( "success" );
+    })
+      .done(function() {
+        console.log( "second success" );
+      })
+      .fail(function() {
+        console.log( "error" );
+      })
+      .always(function() {
+        console.log( "complete" );
+      });
+
+    $( "#result" ).load( "/ajax" );
+
+    $.ajax({
+          url : "/ajax_db"
+        , type : 'POST'
+        , traditional : true
+        , data : { name: [/*'scan_total', 'scan_delta',*/ 'scan_bucket']}
+        , success: function(result) {
+                                console.log(result);
+                                $("h1#db").text("AjaxED!");
+                                $("h3#card_total").text(result.result.scan_total);
+                                $("div#card_delta").text(result.result.scan_delta);
+
+                                b_labels = [];
+                                b_data = [];
+                                for (var i=0; i< result.result.scan_bucket.length; i++) {
+                                    b_labels.push(result.result.scan_bucket[i][0].substr(5,2));
+                                    b_data.push(result.result.scan_bucket[i][1]);
+
+                                }
+                                lineChart.data.labels = b_labels;
+                                lineChart.data.datasets[0].data = b_data;
+                                lineChart.data.datasets[0].label = "ajaxed";
+                                lineChart.update();
+                            }
+        });
+
+
+    });
+</script>
+{% endblock %}

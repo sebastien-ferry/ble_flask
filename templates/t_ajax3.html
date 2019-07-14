@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block header %}
+<link href="/static/css/Chart.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<h1 id="db">DB or not</h1>
+<hr>
+
+<script src="/static/js/Chart.bundle.min.js"></script>
+<script>
+var options = {
+    legend: {display: false }
+    , scales: {
+        xAxes: [ { display: true, scaleLabel: { display: false,}
+          , ticks: { major: { display: false} } } ]
+      , yAxes: [ { display: true, scaleLabel: { display: false, }
+          , ticks: { beginAtZero:true , major: {display:false} } } ]
+    }
+};
+</script>
+
+<div class="row">
+{% for (name,total,delta,bucket,link) in [
+                      ('Scan', 'scan_total', 'scan_delta', 'scan_bucket', '/scan')
+                    , ('Devices', 'device_total', 'device_delta', 'device_bucket', '/device')
+                    , ('Car', 'car_total', 'car_delta', 'car_bucket', '/car')
+                    , ('Names', 'name_total', 'name_delta', 'name_bucket', '/scan_data')
+                    ] %}
+    <div class="col-sm-3">
+    <div class="card border border-info rounded text-center bg-light" style="max-width:14rem;">
+        <h3 class="card-header" id="card_{{total}}">{{total}}...</h3>
+        <div class="card-body bg-light">
+        <div class="card-title text-muted">+<span id="card_{{delta}}">{{delta}}...</span> <span><a href="{{link}}" class="card-link" id="card_{{name}}">{{name}}</a></span></div>
+        <div class="border border-secondary rounded"><br>
+            <canvas style="width:240px;height:240px;" id="line-chart-{{name}}">?</canvas></div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+    var ctx = $("#line-chart-{{name}}");
+    var lineChart_{{name}} = new Chart(ctx, {
+          type: 'bar'
+        , data: {
+                  labels: []
+                , datasets: [ { label: "{{name}}", data: [] } ]
+                }
+        , options: options
+    });
+
+    $.ajax({
+          url : "/ajax_db"
+        , type : 'POST'
+        , traditional : true
+        , data : { name: [ "{{total}}", "{{delta}}", "{{bucket}}" ] }
+        , success: function(result) {
+                                console.log(result);
+                                $("h1#db").text("Updated!!!");
+                                $("h3#card_{{total}}").text(result.result.{{total}});
+                                $("span#card_{{delta}}").text(result.result.{{delta}});
+
+                                var b_labels_{{bucket}} = [];
+                                var b_data_{{bucket}} = [];
+                                for (var i_{{bucket}}=0; i_{{bucket}}< result.result.{{bucket}}.length; i_{{bucket}}++) {
+                                    b_labels_{{bucket}}.push(result.result.{{bucket}}[i_{{bucket}}][0].substr(5,2));
+                                    b_data_{{bucket}}.push(result.result.{{bucket}}[i_{{bucket}}][1]);
+
+                                }
+                                lineChart_{{name}}.data.labels = b_labels_{{bucket}};
+                                lineChart_{{name}}.data.datasets[0].data = b_data_{{bucket}};
+                                lineChart_{{name}}.data.datasets[0].label = "{{name}}";
+                                lineChart_{{name}}.update();
+                            }
+        });
+</script>
+{% endfor %}
+</div>
+
+{% endblock %}

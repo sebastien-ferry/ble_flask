@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block header %}
+{% endblock %}
+
+{% block content %}
+
+<h1 id="title">Ajax Test!</h1>
+
+<div id="resultarea"></div>
+
+<script>
+
+$(document).ready(function(){
+
+    $.ajax({
+        type : 'POST',
+        url : "/ajax",
+        data : {'name': "First - TITLE"},
+        success: function(result) {
+            console.log(result);
+             $("h1#title").text(result.time);
+        }
+    });
+
+    setInterval(function() {
+        $.ajax({
+            type : 'POST',
+            traditional : true,
+            url : "/ajax",
+            data : {'name': ['scan_total', 'scan_delta', 'scan_bucket'] },
+            success: function(ajax) {
+                console.log(ajax);
+                $("#resultarea").text("ajax.request: " + ajax.args[0]);
+                $("#title").text('t4ble ' + ajax.time);
+            }
+        });
+    }, 3000); //3 seconds
+});
+</script>
+{% endblock %}

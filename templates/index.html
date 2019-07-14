@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+{% block header %}
+<link href="/static/css/Chart.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+<button type="button" class="btn btn-warning">Update at {{ date }}</button>
+<p>&nbsp;</p>
+
+<script src="/static/js/Chart.bundle.min.js"></script>
+<script>
+var options = {
+    legend: {display: false }
+    , scales: {
+        xAxes: [ { display: true, scaleLabel: { display: false,}
+          , ticks: { major: { display: false} } } ]
+      , yAxes: [ { display: true, scaleLabel: { display: false, }
+          , ticks: { beginAtZero:true , major: {display:false} } } ]
+    }
+};
+</script>
+
+<div class="row">
+{% for (name,total,delta,bucket,link) in [
+                      ('Scan', 'scan_total', 'scan_delta', 'scan_bucket', '/scan')
+                    , ('Devices', 'device_total', 'device_delta', 'device_bucket', '/device')
+                    , ('Car', 'car_total', 'car_delta', 'car_bucket', '/car')
+                    , ('Names', 'name_total', 'name_delta', 'name_bucket', '/scan_data')
+                    ] %}
+    <div class="col-sm-3">
+    <div class="card border border-info rounded text-center bg-light" style="max-width:14rem;">
+        <h3 class="card-header" id="card_{{total}}">{{total}}...</h3>
+        <div class="card-body bg-light">
+        <div class="card-title text-muted">+<span id="card_{{delta}}">{{delta}}...</span> <span><a href="{{link}}" class="card-link" id="card_{{name}}">{{name}}</a></span></div>
+        <div class="border border-secondary rounded"><br>
+            <canvas style="width:240px;height:240px;" id="line-chart-{{name}}">?</canvas></div>
+        </div>
+    </div>
+    </div>
+
+    <script>
+    var ctx = $("#line-chart-{{name}}");
+    var lineChart_{{name}} = new Chart(ctx, {
+          type: 'bar'
+        , data: {
+                  labels: []
+                , datasets: [ { label: "{{name}}", data: [] } ]
+                }
+        , options: options
+    });
+
+    $.ajax({
+          url : "/ajax_db"
+        , type : 'POST'
+        , traditional : true
+        , data : { query:"db_select_recap", restrict: [ "{{total}}", "{{delta}}", "{{bucket}}" ] }
+        , success: function(result) {
+                                console.log(result);
+                                $("h1#db").text("Updated!!!");
+                                $("h3#card_{{total}}").text(result.result.{{total}});
+                                $("span#card_{{delta}}").text(result.result.{{delta}});
+
+                                var b_labels_{{bucket}} = [];
+                                var b_data_{{bucket}} = [];
+                                for (var i_{{bucket}}=0; i_{{bucket}}< result.result.{{bucket}}.length; i_{{bucket}}++) {
+                                    b_labels_{{bucket}}.push(result.result.{{bucket}}[i_{{bucket}}][0].substr(5,2));
+                                    b_data_{{bucket}}.push(result.result.{{bucket}}[i_{{bucket}}][1]);
+
+                                }
+                                lineChart_{{name}}.data.labels = b_labels_{{bucket}};
+                                lineChart_{{name}}.data.datasets[0].data = b_data_{{bucket}};
+                                lineChart_{{name}}.data.datasets[0].label = "{{name}}";
+                                lineChart_{{name}}.update();
+                            }
+        });
+</script>
+{% endfor %}
+</div>
+
+
+<h1 id="scan2">Scan</h1>
+
+<div style="width:100%; padding-left:0;padding-right:0;margin-left: auto; margin-right:auto;display: block;" class="border border-secondary rounded"><canvas style="width:80%;height:300px;" id="line-chart-scan2"></canvas></div>
+<script>
+    var ctx = $("#line-chart-scan2");
+    var lineChart_scan2 = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [ {
+            label: "Last scans",
+            data: []
+          } ]
+      }
+    });
+
+    $.ajax({
+          url : "/ajax_db"
+        , type : 'POST'
+        , traditional : true
+        , data : { query: "db_select_scan_bucket", restrict: [] }
+        , success: function(result) {
+                                console.log(result);
+                                $("h1#scan2").text("Last scans - " + result.time);
+
+                                var b_labels_scan2 = [];
+                                var b_data_scan2 = [];
+                                for (var i_scan2=0; i_scan2< result.result.length; i_scan2++) {
+                                    b_labels_scan2.push(result.result[i_scan2][0].substr(5,2));
+                                    b_data_scan2.push(result.result[i_scan2][1]);
+
+                                }
+                                lineChart_scan2.data.labels = b_labels_scan2;
+                                lineChart_scan2.data.datasets[0].data = b_data_scan2;
+                                lineChart_scan2.data.datasets[0].label = "scan2";
+                                lineChart_scan2.update();
+                            }
+        });
+
+</script>
+
+{#
+<h1>scan</h1>
+<div class="border border-secondary rounded col-xs-4 text-center">
+{% for scan in t_scan %}
+    {%- if scan[1] == "public" -%} <span class="badge badge-primary">
+    {%- else -%} <span class="badge badge-secondary">
+    {%- endif -%}
+    {{ scan[0] }} {{ scan[2].strftime("%H:%M:%S") }} db:{{ scan[3]}} <b>{{scan[4]}}</b></span>
+{% endfor -%}
+</div>
+
+<h1>device</h1>
+<div class="border border-secondary rounded col-xs-4 text-center">
+{% for device in t_device %}
+{%- if device[1] == "public" -%} <span class="badge badge-primary">
+{%- else -%} <span class="badge badge-secondary">{%- endif -%}
+{%- if device[4] -%}{{device[4]}}{%- endif -%}&nbsp;{{device[3].strftime("%H:%M")}}</span>
+{% endfor -%}
+</div>
+
+<h1>scan data</h1>
+<div class="border border-secondary rounded col-xs-4 text-center">
+{% for scan_data in t_scan_data %}
+    {%- if scan_data[3][0] == "沪" -%} <span class="badge badge-danger">
+    {%- elif scan_data[1] == "public" -%} <span class="badge badge-primary">
+    {%- else -%} <span class="badge badge-secondary">
+    {%- endif -%}
+    {{scan_data[3]}}</span>
+{% endfor -%}
+</div>
+#}
+
+</div>
+
+{% endblock %}

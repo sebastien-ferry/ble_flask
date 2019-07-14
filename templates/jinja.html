@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{# http://mistic100.github.io/jQCloud/index.html #}
+
+{% block header %}
+<link href="/static/css/jqcloud.css" rel="stylesheet">
+{% endblock %}
+
+{% block content %}
+
+<h1>JINJA Test!</h1>
+
+<script src="/static/js/jqcloud.min.js"></script>
+
+{% for name in ['name', 'manufacturer'] %}
+<h2>{{name}}</h2>
+<style>
+#demo_{{name}} {
+    margin:0 auto;
+    width:80%;
+    max-width:600px;
+    height:400px;
+}
+</style>
+<div class="bs-example border rounded">
+    <div id="demo_{{name}}"></div>
+</div>
+
+<script type="text/javascript">
+var words_{{name}} = [
+{% for wordcloud in t_wordcloud[name] %}
+  {text: "{{wordcloud[0]}}({{wordcloud[1]}})", weight: {{wordcloud[1]}}}{% if not loop.last %},{% endif %}
+{% endfor %}
+  ];
+  $('#demo_{{name}}').jQCloud(words_{{name}}, {shape: 'rectangular', autoResize: true});
+</script>
+{% endfor %}
+
+
+{% endblock %}

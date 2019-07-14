@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Devices <button type="button" class="btn btn-warning">Update at {{ date }}</button></h1>
+
+<div class="table-responsive">
+<table class="table table-sm">
+<thead>
+<tr>
+<th>Address</th>
+<th>First seen</th>
+<th>Last seen</th>
+<th>Identifier</th>
+</tr>
+</thead>
+<tbody>
+{% set globals = namespace(found=false) %}
+{% set globals.last_address_with_type = "x" %}
+{% set globals.row_color  = "active" %}
+{% for device in t_device %}
+{% if last_address_with_type != device[0] %}
+     {% set globals.last_address_with_type = device[0] %}
+     {% if globals.row_color == "active" %}{% set globals.row_color  = "success" %}
+     {% else %}{% set globals.row_color  = "active" %}
+     {% endif %}
+{% endif %}
+<tr class="table-{{globals.row_color}}">
+    <td>{{device[0]}} ({{device[1]}})</td>
+    <td>{{device[2]}}</td>
+    <td class="{% if device[3][0] == "沪" %}success{% elif device[1] == "public" %}info{% else %}active{% endif %}"> {{device[3]}}</td>
+    <td>{{device[4]}}</td>
+    <td>{{device[5]}}</td>
+    <td>{{device[6]}}</td>
+    <td>{{device[7]}}</td>
+    <td>{{device[8]}}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div>
+
+{% endblock %}
