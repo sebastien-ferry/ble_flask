@@ -13,13 +13,6 @@ app.debug = True
 from werkzeug.debug import DebuggedApplication
 app.wsgi_app = DebuggedApplication(app.wsgi_app, True)
 
-# @app.after_request
-# def set_response_headers(response):
-#     response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-#     response.headers['Pragma'] = 'no-cache'
-#     response.headers['Expires'] = '0'
-#     return response
-
 @app.after_request
 def add_header(response):
     response.cache_control.max_age = 0
@@ -30,8 +23,10 @@ def add_header(response):
 @app.route('/jinja', defaults={'path': ''})
 @app.route('/jinja/<path:path>')
 def route_jinja(path):
+    t_wordcloud = []
     db_connection, db_cursor = db.db_connect()
-    t_wordcloud = db.db_select_word_cloud(db_connection, db_cursor)
+    if db_cursor:
+        t_wordcloud = db.db_select_word_cloud(db_cursor)
     db.db_close(db_connection, db_cursor)
 
     return render_template('jinja.html', t_wordcloud=t_wordcloud)
@@ -48,8 +43,10 @@ def route_index(path):
 def route_device(p_address=None, p_address_type=None, p_limit=100):
     time_now = time.strftime("%H:%M", time.localtime())
 
+    t_device = []
     db_connection, db_cursor = db.db_connect()
-    t_device = db.db_select_device(db_connection, db_cursor, p_address, p_address_type, p_limit)
+    if db_cursor:
+        t_device = db.db_select_device(db_cursor, p_address, p_address_type, p_limit)
     db.db_close(db_connection, db_cursor)
     return render_template('device.html', date=time_now, t_device=t_device)
 
@@ -59,8 +56,10 @@ def route_device(p_address=None, p_address_type=None, p_limit=100):
 def route_scan_data(p_address=None, p_address_type=None, p_limit=10):
     time_now = time.strftime("%H:%M", time.localtime())
 
+    t_scan_data = []
     db_connection, db_cursor = db.db_connect()
-    t_scan_data = db.db_select_scan_data(db_connection, db_cursor, p_address, p_address_type, p_limit)
+    if db_cursor:
+        t_scan_data = db.db_select_scan_data(db_cursor, p_address, p_address_type, p_limit)
     db.db_close(db_connection, db_cursor)
     return render_template('scan_data.html', date=time_now, t_scan_data=t_scan_data)
 
@@ -68,9 +67,11 @@ def route_scan_data(p_address=None, p_address_type=None, p_limit=10):
 @app.route('/scan_data_car')
 def route_scan_data_car():
     time_now = time.strftime("%H:%M", time.localtime())
+    t_scan_data_car = []
 
     db_connection, db_cursor = db.db_connect()
-    t_scan_data_car = db.db_select_scan_data_car(db_connection, db_cursor)
+    if db_cursor:
+        t_scan_data_car = db.db_select_scan_data_car(db_cursor)
     db.db_close(db_connection, db_cursor)
     return render_template('scan_data_car.html', date=time_now, t_scan_data_car=t_scan_data_car)
 
@@ -115,12 +116,12 @@ def route_ajax_db():
 
     t_result = []
     db_connection, db_cursor = db.db_connect()
-    if query == "db_select_scan_bucket":
-        t_result = db.db_select_scan_bucket(db_connection, db_cursor)
-    elif query == "db_select_recap":
-        t_result = db.db_select_recap(db_connection, db_cursor, restrict)
-
-    db.db_close(db_connection, db_cursor)
+    if db_cursor:
+        if query == "db_select_scan_bucket":
+            t_result = db.db_select_scan_bucket(db_cursor)
+        elif query == "db_select_recap":
+            t_result = db.db_select_recap(db_cursor, restrict)
+        db.db_close(db_connection, db_cursor)
 
     return jsonify(time=time_now, result=t_result)
 

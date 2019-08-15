@@ -1,6 +1,8 @@
 import psycopg2
 
 def db_connect():
+    db_connection = None
+    db_cursor = None
     try:
         db_connection = psycopg2.connect( user = "ble", password = "ble"
                                      , host = "t4.lan", port = "5432"
@@ -9,13 +11,16 @@ def db_connect():
 
     except (Exception, psycopg2.Error) as error :
         print ("ERROR PsycoPG2 (db_connect) : ", error)
+        return None, None
 
     return db_connection, db_cursor
 
 def db_close(db_connection, db_cursor):
     try:
-        if (db_connection):
+        if (db_cursor):
             db_cursor.close()
+
+        if (db_connection):
             db_connection.close()
 
     except (Exception, psycopg2.Error) as error :
@@ -23,7 +28,7 @@ def db_close(db_connection, db_cursor):
 
     return
 
-def db_select_device(db_connection, db_cursor, address=None, address_type=None, limit=10):
+def db_select_device(db_cursor, address=None, address_type=None, limit=10):
     sql = """ select d.*, o.identifier
               from device as d inner join oui as o
                   on  o.prefix = left(d.address, 8)
@@ -35,7 +40,7 @@ def db_select_device(db_connection, db_cursor, address=None, address_type=None, 
     device = db_cursor.fetchall()
     return device
 
-def db_select_scan(db_connection, db_cursor):
+def db_select_scan(db_cursor):
     sql = """ SELECT * from scan
              order by timestamp desc
              limit 10 ;"""
@@ -43,7 +48,7 @@ def db_select_scan(db_connection, db_cursor):
     scan = db_cursor.fetchall()
     return scan
 
-def db_select_scan_data(db_connection, db_cursor, address=None, address_type=None, limit=None):
+def db_select_scan_data(db_cursor, address=None, address_type=None, limit=None):
     sql = """select *
              from  scan_data
              where 1=1""" #name in ('Short Local Name', 'Complete Local Name')"""
@@ -60,7 +65,7 @@ def db_select_scan_data(db_connection, db_cursor, address=None, address_type=Non
     scan_data = db_cursor.fetchall()
     return scan_data
 
-def db_select_scan_bucket(db_connection, db_cursor):
+def db_select_scan_bucket(db_cursor):
     sql = """select day_hour, coalesce(count(scan.*),0)
     from (	select generate_series(date_trunc('hour', now() - interval '1 day'),now(), '10 min') as day_hour
     	 ) as timeserie
@@ -73,7 +78,7 @@ def db_select_scan_bucket(db_connection, db_cursor):
     scan_data_bucket = db_cursor.fetchall()
     return scan_data_bucket
 
-def db_select_scan_data_car(db_connection, db_cursor):
+def db_select_scan_data_car(db_cursor):
     sql = """ SELECT *
               FROM scan_data as s
               WHERE s.value like '沪%'
@@ -82,7 +87,7 @@ def db_select_scan_data_car(db_connection, db_cursor):
     scan_data_car = db_cursor.fetchall()
     return scan_data_car
 
-def db_select_recap(db_connection, db_cursor, restrict=None):
+def db_select_recap(db_cursor, restrict=None):
     t_queries = {
           'device_total' : """
             select count(1)
@@ -182,7 +187,7 @@ def db_select_recap(db_connection, db_cursor, restrict=None):
 
     return t_result
 
-def db_select_word_cloud(db_connection, db_cursor):
+def db_select_word_cloud(db_cursor):
     t_queries = {
           'name' : """
             select value,  count(1)
