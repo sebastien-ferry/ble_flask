@@ -40,16 +40,7 @@ def route_jinja(path):
 @app.route('/<path:path>')
 def route_index(path):
     time_now = time.strftime("%H:%M", time.localtime())
-
-    db_connection, db_cursor = db.db_connect()
-    #t_recap = db.db_select_recap(db_connection, db_cursor)
-    ##t_device = db.db_select_device(db_connection, db_cursor)
-    ##t_scan = db.db_select_scan(db_connection, db_cursor)
-    ##t_scan_data = db.db_select_scan_data(db_connection, db_cursor)
-    #t_scan_bucket = db.db_select_scan_bucket(db_connection, db_cursor)
-    db.db_close(db_connection, db_cursor)
-
-    return render_template('index.html', date=time_now) #,t_recap=[], t_device=t_device, t_scan=t_scan, t_scan_data=t_scan_data, t_scan_bucket=t_scan_bucket)
+    return render_template('index.html', date=time_now)
 
 @app.route('/device')
 @app.route('/device/<p_limit>')
