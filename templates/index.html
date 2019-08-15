@@ -6,7 +6,7 @@
 
 {% block content %}
 <div class="container">
-<button type="button" class="btn btn-warning">Update at {{ date }}</button>
+<button type="button" class="btn btn-warning" id="timer">Update at {{ date }}</button>
 <p>&nbsp;</p>
 
 <script src="/static/js/Chart.bundle.min.js"></script>
@@ -41,8 +41,8 @@ var options = {
     </div>
 
     <script>
-    var ctx = $("#line-chart-{{name}}");
-    var lineChart_{{name}} = new Chart(ctx, {
+    var ctx_{{name}} = $("#line-chart-{{name}}");
+    var lineChart_{{name}} = new Chart(ctx_{{name}}, {
           type: 'bar'
         , data: {
                   labels: []
@@ -51,30 +51,35 @@ var options = {
         , options: options
     });
 
-    $.ajax({
-          url : "/ajax_db"
-        , type : 'POST'
-        , traditional : true
-        , data : { query:"db_select_recap", restrict: [ "{{total}}", "{{delta}}", "{{bucket}}" ] }
-        , success: function(result) {
-                                console.log(result);
-                                $("h1#db").text("Updated!!!");
-                                $("h3#card_{{total}}").text(result.result.{{total}});
-                                $("span#card_{{delta}}").text(result.result.{{delta}});
+    function call_ajax_${{name}}() {
+        $.ajax({
+              url : "/ajax_db"
+            , type : 'POST'
+            , traditional : true
+            , data : { query:"db_select_recap", restrict: [ "{{total}}", "{{delta}}", "{{bucket}}" ] }
+            , success: function(result) {
+                                    console.log(result);
+                                    $("h1#db").text("Updated!!!");
+                                    $("h3#card_{{total}}").text(result.result.{{total}});
+                                    $("span#card_{{delta}}").text(result.result.{{delta}});
 
-                                var b_labels_{{bucket}} = [];
-                                var b_data_{{bucket}} = [];
-                                for (var i_{{bucket}}=0; i_{{bucket}}< result.result.{{bucket}}.length; i_{{bucket}}++) {
-                                    b_labels_{{bucket}}.push(result.result.{{bucket}}[i_{{bucket}}][0].substr(5,2));
-                                    b_data_{{bucket}}.push(result.result.{{bucket}}[i_{{bucket}}][1]);
+                                    var b_labels_{{bucket}} = [];
+                                    var b_data_{{bucket}} = [];
+                                    for (var i_{{bucket}}=0; i_{{bucket}}< result.result.{{bucket}}.length; i_{{bucket}}++) {
+                                        b_labels_{{bucket}}.push(result.result.{{bucket}}[i_{{bucket}}][0].substr(5,2));
+                                        b_data_{{bucket}}.push(result.result.{{bucket}}[i_{{bucket}}][1]);
 
+                                    }
+                                    lineChart_{{name}}.data.labels = b_labels_{{bucket}};
+                                    lineChart_{{name}}.data.datasets[0].data = b_data_{{bucket}};
+                                    lineChart_{{name}}.data.datasets[0].label = "{{name}}";
+                                    lineChart_{{name}}.update();
                                 }
-                                lineChart_{{name}}.data.labels = b_labels_{{bucket}};
-                                lineChart_{{name}}.data.datasets[0].data = b_data_{{bucket}};
-                                lineChart_{{name}}.data.datasets[0].label = "{{name}}";
-                                lineChart_{{name}}.update();
-                            }
-        });
+            });
+        }
+
+        call_ajax_${{name}}();
+        setInterval(call_ajax_${{name}}, 30000 + Math.floor(Math.random() * 10000));
 </script>
 {% endfor %}
 </div>
@@ -84,8 +89,8 @@ var options = {
 
 <div style="width:100%; padding-left:0;padding-right:0;margin-left: auto; margin-right:auto;display: block;" class="border border-secondary rounded"><canvas style="width:80%;height:300px;" id="line-chart-scan2"></canvas></div>
 <script>
-    var ctx = $("#line-chart-scan2");
-    var lineChart_scan2 = new Chart(ctx, {
+    var ctx_scan2 = $("#line-chart-scan2");
+    var lineChart_scan2 = new Chart(ctx_scan2, {
       type: 'line',
       data: {
         labels: [],
@@ -96,12 +101,13 @@ var options = {
       }
     });
 
-    $.ajax({
-          url : "/ajax_db"
-        , type : 'POST'
-        , traditional : true
-        , data : { query: "db_select_scan_bucket", restrict: [] }
-        , success: function(result) {
+    function call_ajax_scan2() {
+        $.ajax({
+              url : "/ajax_db"
+            , type : 'POST'
+            , traditional : true
+            , data : { query: "db_select_scan_bucket", restrict: [] }
+            , success: function(result) {
                                 console.log(result);
                                 $("h1#scan2").text("Last scans - " + result.time);
 
@@ -118,9 +124,10 @@ var options = {
                                 lineChart_scan2.update();
                             }
         });
-
+    }
+    call_ajax_scan2();
+    setInterval(call_ajax_scan2, 60000 + Math.floor(Math.random() * 10000)); // milliseconds
 </script>
-
 {#
 <h1>scan</h1>
 <div class="border border-secondary rounded col-xs-4 text-center">

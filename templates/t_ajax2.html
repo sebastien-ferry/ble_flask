@@ -14,7 +14,7 @@ var b_labels = [];
 var b_data =[] ;
 
 var options = {
-    legend: {display: false }
+    legend: {display: true }
     , scales: {
         xAxes: [ { display: true, scaleLabel: { display: false,}
           , ticks: { major: { display: false} } } ]
@@ -23,8 +23,6 @@ var options = {
     }
 };
 </script>
-resultarea: <div id="resultarea"></div>
-result: <div id="result"></div>
 
 {% for (name,total,delta,bucket,link) in [
                       ('Scan', 'scan_total', 'scan_delta', 'scan_bucket', '/scan')
@@ -57,45 +55,40 @@ result: <div id="result"></div>
 <script>
 $(document).ready(function(){
 
-    var jqxhr = $.getJSON( "/ajax", function() {
-      console.log( "success" );
-    })
-      .done(function() {
-        console.log( "second success" );
-      })
-      .fail(function() {
-        console.log( "error" );
-      })
-      .always(function() {
-        console.log( "complete" );
-      });
+    function call_ajax_scan_bucket() {
 
-    $( "#result" ).load( "/ajax" );
+        function ajax_scan_bucket(callback) {
+                            console.log(callback);
+                            $("h1#db").text("AjaxED!");
+                            $("h3#card_total").text(callback.result.scan_total);
+                            $("div#card_delta").text(callback.result.scan_delta);
 
-    $.ajax({
-          url : "/ajax_db"
-        , type : 'POST'
-        , traditional : true
-        , data : { name: [/*'scan_total', 'scan_delta',*/ 'scan_bucket']}
-        , success: function(result) {
-                                console.log(result);
-                                $("h1#db").text("AjaxED!");
-                                $("h3#card_total").text(result.result.scan_total);
-                                $("div#card_delta").text(result.result.scan_delta);
+                            b_labels = [];
+                            b_data = [];
+                            for (var i=0; i< callback.result.scan_bucket.length; i++) {
+                                b_labels.push(callback.result.scan_bucket[i][0].substr(5,2));
+                                b_data.push(callback.result.scan_bucket[i][1]);
 
-                                b_labels = [];
-                                b_data = [];
-                                for (var i=0; i< result.result.scan_bucket.length; i++) {
-                                    b_labels.push(result.result.scan_bucket[i][0].substr(5,2));
-                                    b_data.push(result.result.scan_bucket[i][1]);
-
-                                }
-                                lineChart.data.labels = b_labels;
-                                lineChart.data.datasets[0].data = b_data;
-                                lineChart.data.datasets[0].label = "ajaxed";
-                                lineChart.update();
                             }
+                            lineChart.data.labels = b_labels;
+                            lineChart.data.datasets[0].data = b_data;
+                            var date = new Date;
+                            var hours = date.getHours();
+                            var minutes = date.getMinutes();
+                            var seconds = date.getSeconds();
+                            lineChart.data.datasets[0].label = hours +":"+minutes+":"+seconds;
+                            lineChart.update();
+                        }
+        $.ajax({
+              url : "/ajax_db"
+            , type : 'POST'
+            , traditional : true
+            , data : { query: 'db_select_recap', restrict: [ 'scan_total', 'scan_delta', 'scan_bucket']}
+            , success: ajax_scan_bucket
         });
+    }
+    call_ajax_scan_bucket();
+    setInterval(call_ajax_scan_bucket,  5000 + Math.floor(Math.random() * 10000)); // milliseconds
 
 
     });
