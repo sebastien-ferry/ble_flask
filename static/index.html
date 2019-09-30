@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+
+{% block content %}
+    Update at {{ date }}
+
+    <h1>scan</h1>
+
+    <ol>{% for scan in t_scan %}
+	    <li><b>{{ scan[0] }}</b>({{ scan[1] }}) at:{{ scan[2] }} db:{{ scan[3] }} {{ scan[4] }} oui:{{ scan[5] }}  </li>
+    {% endfor %}
+    </ol> 
+
+    <h1>device</h1>
+
+    <ol>{% for device in t_device %}
+	    <li><b>{{ device[0] }}</b>({{ device[1] }}) {{device[2]}} {{device[3]}} <b>{{device[4]}}</b>   </li>
+    {% endfor %}
+    </ol>
+    
+    <h1>scan data</h1>
+
+    <ol>{% for scan_data in t_scan_data %}
+	    <li><b>{{scan_data[0]}}</b>({{scan_data[1]}}) {{ scan_data[2] }} : <b>{{ scan_data[3] }}</b></li>
+    {% endfor %}
+    </ol>
+
+{% endblock %}

@@ -1,12 +1,16 @@
+import db_password
+
 import psycopg2
 
 def db_connect():
     db_connection = None
     db_cursor = None
     try:
-        db_connection = psycopg2.connect( user = "ble", password = "ble"
-                                     , host = "t4.lan", port = "5432"
-                                     , database = "ble")
+        db_connection = psycopg2.connect( user = db_password_user
+                                     , password = db_password_password
+                                     , host = db_password_host
+                                     , port = db_password_port
+                                     , database = db_password_database)
         db_cursor = db_connection.cursor()
 
     except (Exception, psycopg2.Error) as error :
