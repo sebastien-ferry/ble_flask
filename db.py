@@ -6,11 +6,11 @@ def db_connect():
     db_connection = None
     db_cursor = None
     try:
-        db_connection = psycopg2.connect( user = db_password_user
-                                     , password = db_password_password
-                                     , host = db_password_host
-                                     , port = db_password_port
-                                     , database = db_password_database)
+        db_connection = psycopg2.connect( user = db_password.user
+                                     , password = db_password.password
+                                     , host = db_password.host
+                                     , port = db_password.port
+                                     , database = db_password.database)
         db_cursor = db_connection.cursor()
 
     except (Exception, psycopg2.Error) as error :
