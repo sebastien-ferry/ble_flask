@@ -1,3 +1,6 @@
+# db/select
+# BLE V2/db.py: select BLE data from database
+
 import db_password
 
 import psycopg2

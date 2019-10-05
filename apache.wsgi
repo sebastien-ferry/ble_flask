@@ -1,3 +1,3 @@
 import sys
 sys.path.insert(0, '/var/www/ble/')
-from ble import app as application
+from ble_flask import app as application
